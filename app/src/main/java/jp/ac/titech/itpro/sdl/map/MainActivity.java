@@ -5,6 +5,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,10 +37,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private TextView infoView;
     private GoogleMap map;
+    private Button currentLocationButton;
 
     private FusedLocationProviderClient locationClient;
     private LocationRequest request;
     private LocationCallback callback;
+
+    // Current Location
+    private LatLng ll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +59,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             fragment.getMapAsync(this);
         }
 
+        currentLocationButton = findViewById(R.id.current_location_button);
+        currentLocationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (map == null || ll == null) {
+                    Log.d(TAG, "onLocationResult: map == null || ll == null");
+                    return;
+                }
+                map.animateCamera(CameraUpdateFactory.newLatLng(ll));
+            }
+        });
+
         locationClient = LocationServices.getFusedLocationProviderClient(this);
 
         request = LocationRequest.create();
@@ -65,13 +83,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 Log.d(TAG, "onLocationResult");
                 Location location = locationResult.getLastLocation();
-                LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
+                ll = new LatLng(location.getLatitude(), location.getLongitude());
                 infoView.setText(getString(R.string.latlng_format, ll.latitude, ll.longitude));
-                if (map == null) {
-                    Log.d(TAG, "onLocationResult: map == null");
-                    return;
-                }
-                map.animateCamera(CameraUpdateFactory.newLatLng(ll));
             }
         };
     }
